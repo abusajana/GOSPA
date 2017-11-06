@@ -30,7 +30,7 @@ if ndim == 2
         'VerticalAlignment', 'bottom');
     plot(x_mat(1, :), x_mat(2,:), 'x', 'color', bluecol, 'MarkerSize', 10);
     plot(y_mat(1, :), y_mat(2,:), 'o', 'color', redcol, 'MarkerSize', 10);
-    legend('X', 'Y');
+    legend('X', 'Y', 'Location', 'Best');
     % plot the output
     x_ind = 1:nx;
     x_ind = x_ind(x_to_y_assignment~=0);

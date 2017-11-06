@@ -25,6 +25,24 @@ function [person_to_obj, obj_to_person, opt_cost] ...
 %
 
 m_person = size(cost_mat, 1); n_obj = size(cost_mat,2);
+
+% index for objects that will be left unassigned
+un_ass_ind = 0;
+
+% corner cases when there is only one person and/or one object
+if m_person == 1
+    [opt_cost, person_to_obj] = max(cost_mat);
+    obj_to_person = un_ass_ind * ones(n_obj, 1);
+    obj_to_person(person_to_obj) = 1;
+    return;
+end
+if n_obj == 1
+    [opt_cost, obj_to_person] = max(cost_mat);
+    person_to_obj = un_ass_ind * ones(m_person, 1);
+    person_to_obj(obj_to_person) = 1;
+    return;
+end
+
 swap_dim_flag = false;
 epsil = 1/ max(n_obj, m_person);
 
@@ -35,8 +53,6 @@ if n_obj < m_person % the below implementation works for m_person<=n_obj.
     swap_dim_flag = true;
 end
 
-% index for objects that will be left unassigned
-un_ass_ind = 0;
 
 % obj ind of assignment for person 1 to m
 person_to_obj = un_ass_ind * ones(m_person, 1);
