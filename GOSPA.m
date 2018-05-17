@@ -1,5 +1,5 @@
 function [d_gospa, x_to_y_assignment, decomposed_cost] = ...
-    GOSPA(x_mat, y_mat, p, c, alpha)
+                                        GOSPA(x_mat, y_mat, p, c, alpha)
 % AUTHOR: Abu Sajana Rahmathullah
 % DATE OF CREATION: 7 August, 2017
 %
@@ -91,7 +91,6 @@ else
         for ind = 1:nx
             if x_to_y_assignment(ind) ~= 0
                 opt_cost = opt_cost + cost_mat(ind,x_to_y_assignment(ind));
-                
                 if(alpha == 2)                    
                     decomposed_cost.localisation = ...
                         decomposed_cost.localisation ...
