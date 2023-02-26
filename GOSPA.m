@@ -1,5 +1,5 @@
 function [d_gospa, x_to_y_assignment, decomposed_cost] = ...
-                                        GOSPA(x_mat, y_mat, p, c, alpha)
+    GOSPA(x_mat, y_mat, p, c, alpha)
 % AUTHOR: Abu Sajana Rahmathullah
 % DATE OF CREATION: 7 August, 2017
 %
@@ -46,11 +46,17 @@ function [d_gospa, x_to_y_assignment, decomposed_cost] = ...
 % in this function for other choices.
 
 % check that the input parameters are within the valid range
+
+% Improvement suggested by Jan Krejčí in February 2023 using the assign2D function in the TrackerComponentLibrary instead of the auction algorithm
+% D. F. Crouse, "The tracker component library: free routines for rapid prototyping," in IEEE Aerospace and Electronic Systems Magazine, vol. 32, no. 5, pp. 18-27, May 2017
+
+
+n_ouput_arg=nargout;
+
 checkInput();
 
-n_ouput_arg = nargout;
-nx          = size(x_mat, 2); % no of points in x_mat
-ny          = size(y_mat, 2); % no of points in y_mat
+nx = size(x_mat, 2); % no of points in x_mat
+ny = size(y_mat, 2); % no of points in y_mat
 
 % compute cost matrix
 cost_mat = zeros(nx, ny);
@@ -63,9 +69,11 @@ end
 
 % intialise output values
 decomposed_cost     = struct( ...
-                            'localisation', 0, ...
-                            'missed',       0, ...
-                            'false',        0);
+    'localisation', 0, ...
+    'missed',       0, ...
+    'false',        0);
+
+
 x_to_y_assignment   = [];
 opt_cost            = 0;
 
@@ -77,45 +85,47 @@ if nx == 0 % when x_mat is empty, all entries in y_mat are false
     decomposed_cost.false = opt_cost;
 else
     if ny == 0 % when y_mat is empty, all entries in x_mat are missed
-        opt_cost               = -nx * dummy_cost;        
+        opt_cost               = -nx * dummy_cost;
+
         if(alpha==2)
             decomposed_cost.missed = opt_cost;
         end
-        
     else % when both x_mat and y_mat are non-empty, use auction algorithm
         cost_mat = -(cost_mat.^p);
-        [x_to_y_assignment, y_to_x_assignment, ~] ...
-            = auctionAlgortihm(cost_mat, 10*(nx * ny));
-        
+
+        [x_to_y_assignment, y_to_x_assignment]  = assign2D(cost_mat, true);
+
+
         % use the assignments to compute the cost
         for ind = 1:nx
             if x_to_y_assignment(ind) ~= 0
                 opt_cost = opt_cost + cost_mat(ind,x_to_y_assignment(ind));
-                if(alpha == 2)                    
+
+                if(alpha==2)
+
                     decomposed_cost.localisation = ...
                         decomposed_cost.localisation ...
                         + cost_mat(ind,x_to_y_assignment(ind)) ...
                         .* double(cost_mat(ind,x_to_y_assignment(ind)) > -c^p);
-                    
-                    decomposed_cost.missed      = ...
-                        decomposed_cost.missed ...
+
+                    decomposed_cost.missed      = decomposed_cost.missed ...
                         - dummy_cost ...
                         .* double(cost_mat(ind,x_to_y_assignment(ind)) == -c^p);
-                    
+
                     decomposed_cost.false       = ...
                         decomposed_cost.false ...
                         - dummy_cost ...
                         .* double(cost_mat(ind,x_to_y_assignment(ind)) == -c^p);
                 end
             else
-                opt_cost = opt_cost - dummy_cost;
-                if(alpha == 2)
+                opt_cost               = opt_cost - dummy_cost;
+                if(alpha==2)
                     decomposed_cost.missed = decomposed_cost.missed - dummy_cost;
                 end
             end
         end
         opt_cost = opt_cost - sum(y_to_x_assignment == 0) * dummy_cost;
-        if(alpha == 2)
+        if(alpha==2)
             decomposed_cost.false = decomposed_cost.false ...
                 - sum(y_to_x_assignment == 0) * dummy_cost;
         end
@@ -138,12 +148,13 @@ decomposed_cost.false        = (-decomposed_cost.false);
         if ~(c>0)
             error('The value of base distance c should be larger than 0.');
         end
+
         if ~((alpha > 0) && (alpha <= 2))
             error('The value of alpha should be within (0,2].');
         end
         if alpha ~= 2 && n_ouput_arg==3
-            warning(['The decomposed_cost is not valid for alpha = ' ...
-                num2str(alpha) '.']);
+            warning(['decomposed_cost is not valid for alpha = ' ...
+                num2str(alpha)]);
         end
     end
 end
